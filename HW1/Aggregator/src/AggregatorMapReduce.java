@@ -1,30 +1,36 @@
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
 import java.io.IOException;
 import java.util.*;
 
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.conf.*;
-import org.apache.hadoop.io.*;
-import org.apache.hadoop.mapred.*;
-import org.apache.hadoop.util.*;
-
 
 public class AggregatorMapReduce {
-    public static class Map extends MapReduceBase implements Mapper<LongWritable, Text, Text, IntWritable> {
-        public void map(LongWritable key, Text value, OutputCollector<Int, IntWritale> output, Reporter reporter) throws IOException{
-            if(key != 0) {
-                String[] splitted = value.toString().split(',');
-                output.collect(Text(splitted[1]), Text(splitted[4]));
+    public static class Map extends Mapper<LongWritable, Text, Text, Text> {
+
+        public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+            String line = value.toString();
+            if (line.charAt(0) != '\"') {
+                String[] splitted_value = line.split(",");
+                context.write(new Text(splitted_value[1]), new Text(splitted_value[4]));
             }
         }
     }
 
-    public static class Reduce extends MapReduceBase implements Reducer<Text, IntWritable, Text, IntWritable> {
+    public static class Reduce extends Reducer<Text, Text, Text, Text> {
         private HashMap<String, Integer> countries = new HashMap<String, Integer>();
         private ArrayList<Integer> values = new ArrayList<Integer>();
-        public void reduce(Text key, Iterator<Text> iterator,
-                           OutputCollector<Text, IntWritable, IntWritable, DoubleWritable, IntWritable, DoubleWritable, DoubleWritable> output,
-                           Reporter reporter) throws IOException{
-            String year = key.toString();
+
+        public void reduce(Text key, Iterable<Text> iterable, Context context) throws IOException, InterruptedException{
+            Iterator<Text> iterator = iterable.iterator();
             while(iterator.hasNext()){
                 String country = iterator.toString();
                 if(countries.get(country) != null){
@@ -37,7 +43,11 @@ public class AggregatorMapReduce {
             for(Integer value: countries.values()){
                 values.add(value);
             }
-            output.collect(Text(year), values.size(), get_minimum(values), get_median(values), get_maximum(values), get_average(values), get_dispersion(values));
+            String output_string = values.size() + "\t" +
+                    get_minimum(values) + "\t" + get_median(values) +
+                    "\t" + get_maximum(values) + "\t" + get_average(values)
+                    + "\t" + get_dispersion(values) + "\n";
+            context.write(key, new Text(output_string));
 
         }
 
@@ -78,21 +88,15 @@ public class AggregatorMapReduce {
     }
 
     public static void main(String[] args) throws Exception{
-        JobConf conf = new JobConf(AggregatorMapReduce.class);
-        conf.setJobName("Aggregator");
-
-        conf.setOutputKeyClass(Text.class);
-        conf.setOutputValuesClass(IntWritable.class);
-
-        conf.setMapperClass(Map.class);
-        conf.setReducerClass(Reduce.class);
-
-        conf.setInputFormat(TextInputFormat.class);
-        conf.setOutputFormat(TextOutputFormat.class);
-
-        FileInputFormat.setInputPaths(conf, new Path(args[0]));
-        FileOutputFormat.setOutputPaths(conf, new Path(args[1]));
-
-        JobClient.runJob(conf);
+        Configuration conf = new Configuration();
+        Job job = Job.getInstance(conf, "aggregation");
+        job.setJarByClass(AggregatorMapReduce.class);
+        job.setMapperClass(Map.class);
+        job.setReducerClass(Reduce.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
