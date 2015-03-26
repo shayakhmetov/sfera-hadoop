@@ -27,12 +27,11 @@ public class AggregatorMapReduce {
 
     public static class Reduce extends Reducer<Text, Text, Text, Text> {
         private HashMap<String, Integer> countries = new HashMap<String, Integer>();
-        private ArrayList<Integer> values = new ArrayList<Integer>();
-
+        private ArrayList<Integer> values;
         public void reduce(Text key, Iterable<Text> iterable, Context context) throws IOException, InterruptedException{
             Iterator<Text> iterator = iterable.iterator();
-            while(iterator.hasNext()){
-                String country = iterator.toString();
+            for(Text value: iterable){
+                String country = value.toString();
                 if(countries.get(country) != null){
                     countries.put(country, countries.get(country) + 1);
                 }
@@ -40,23 +39,21 @@ public class AggregatorMapReduce {
                     countries.put(country, 1);
                 }
             }
-            for(Integer value: countries.values()){
-                values.add(value);
-            }
+            values = new ArrayList<Integer>(countries.values());
+            Collections.sort(values);
             String output_string = values.size() + "\t" +
                     get_minimum(values) + "\t" + get_median(values) +
                     "\t" + get_maximum(values) + "\t" + get_average(values)
-                    + "\t" + get_dispersion(values) + "\n";
+                    + "\t" + get_dispersion(values);
             context.write(key, new Text(output_string));
 
         }
 
         private Integer get_minimum(ArrayList<Integer> values){
-            return Collections.min(values);
+            return values.get(0);
         }
 
         private Double get_median(ArrayList<Integer> values){
-            Collections.sort(values);
             if(values.size() % 2 != 0){
                 return (double) values.get(values.size()/2);
             }
@@ -66,7 +63,7 @@ public class AggregatorMapReduce {
         }
 
         private Integer get_maximum(ArrayList<Integer> values){
-            return Collections.max(values);
+            return values.get(values.size() - 1);
         }
 
         private Double get_average(ArrayList<Integer> values){
