@@ -26,14 +26,15 @@ public class AggregatorMapReduce {
     }
 
     public static class Reduce extends Reducer<Text, Text, Text, Text> {
-        private HashMap<String, Integer> countries = new HashMap<String, Integer>();
+        private HashMap<String, Integer> countries;
         private ArrayList<Integer> values;
         public void reduce(Text key, Iterable<Text> iterable, Context context) throws IOException, InterruptedException{
-            Iterator<Text> iterator = iterable.iterator();
+            countries = new HashMap<String, Integer>();
             for(Text value: iterable){
                 String country = value.toString();
-                if(countries.get(country) != null){
-                    countries.put(country, countries.get(country) + 1);
+                Integer number = countries.get(country);
+                if(number != null){
+                    countries.put(country, number + 1);
                 }
                 else{
                     countries.put(country, 1);
@@ -46,7 +47,6 @@ public class AggregatorMapReduce {
                     "\t" + get_maximum(values) + "\t" + get_average(values)
                     + "\t" + get_dispersion(values);
             context.write(key, new Text(output_string));
-
         }
 
         private Integer get_minimum(ArrayList<Integer> values){
