@@ -13,7 +13,7 @@ for line in sys.stdin:
     line = line.rstrip().split('\t')
     if current_n != line[0]:
         if current_n:
-            if adj_list:
+            if adj_list is not None:
                 print(current_n, 1-d + d*result_p, adj_list, sep='\t')
             else:
                 print(current_n, 1-d + d*result_p, sep='\t')
@@ -27,7 +27,7 @@ for line in sys.stdin:
         adj_list = line[2]
 
 if current_n:
-    if adj_list:
+    if adj_list is not None:
         print(current_n, 1-d + d*result_p, adj_list, sep='\t')
     else:
         print(current_n, 1-d + d*result_p, sep='\t')

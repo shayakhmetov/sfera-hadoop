@@ -18,3 +18,5 @@ for line in sys.stdin:
         adj_len = len(adj_list)
         for m in adj_list:
             print(m, 'U', float(page_rank)/adj_len, sep='\t')
+    else:
+        assert False

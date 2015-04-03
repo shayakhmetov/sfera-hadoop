@@ -18,10 +18,10 @@ for line in sys.stdin:
         if len(line) == 2:
             current_citied.add(cited)
     else:
-        if current_citing and current_citied:
+        if current_citing and len(current_citied) != 0:
             print(current_citing, 1-d, sep='\t', end='\t')
             print(*current_citied, sep=',')
-        elif current_citing and not current_citied:
+        elif current_citing:
             print(current_citing, 1-d, sep='\t')
 
         current_citing = citing
