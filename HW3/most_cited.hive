@@ -1,0 +1,8 @@
+use r_shayahmetov;
+DROP SCHEME IF EXISTS apat;
+DROP SCHEME IF EXISTS cite;
+CREATE EXTERNAL TABLE apat (id bigint, year int, gdate int, appyear int, country string, rest string) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE;
+CREATE EXTERNAL TABLE cite (citing bigint, cited bigint) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE;
+LOAD DATA INPATH '/user/r.shayahmetov/patents/apat63_99.txt' OVERWRITE INTO TABLE apat;
+LOAD DATA INPATH '/user/r.shayahmetov/patents/cite75_99.txt' OVERWRITE INTO TABLE cite;
+SELECT id, count(1) AS counts FROM apat JOIN cite ON apat.id = cite.cited WHERE year = 1990 AND country = '"US"' GROUP BY cited ORDER BY counts DESC LIMIT 10;
