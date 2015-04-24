@@ -1,6 +1,2 @@
 use r_shayahmetov;
-CREATE EXTERNAL TABLE IF NOT EXISTS apat (id bigint, year int, gdate int, appyear int, country string, rest string) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/r.shayahmetov/patents/apat63_99.txt';
-CREATE EXTERNAL TABLE IF NOT EXISTS cite (citing bigint, cited bigint) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/r.shayahmetov/patents/cite75_99.txt';
 SELECT id, count(1) AS counts FROM apat JOIN cite ON apat.id = cite.cited WHERE apat.year = 1990 AND apat.country = '"US"' GROUP BY id ORDER BY counts DESC LIMIT 10;
-DROP TABLE apat;
-DROP TABLE cite;

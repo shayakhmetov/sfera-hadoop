@@ -1,0 +1,6 @@
+use r_shayahmetov;
+CREATE EXTERNAL TABLE IF NOT EXISTS apat (id bigint, year int, gdate bigint, appyear int, country string) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE;
+LOAD DATA INPATH '/user/r.shayahmetov/patents/apat63_99.txt' OVERWRITE INTO TABLE apat;
+
+CREATE EXTERNAL TABLE IF NOT EXISTS cite (citing bigint, cited bigint) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE;
+LOAD DATA INPATH '/user/r.shayahmetov/patents/cite75_99.txt' OVERWRITE INTO TABLE cite;
