@@ -1,10 +1,9 @@
-cite = LOAD '/user/r.shayahmetov/patents/cite75_99.txt'  USING PigStorage(',') AS (citing: long, citied: long);
+cite = LOAD '/user/r.shayahmetov/patents/cite75_99.txt'  USING PigStorage(',') AS (citing: long, cited: long);
 apat = LOAD '/user/r.shayahmetov/patents/apat63_99.txt' USING PigStorage(',') AS (id: long, year: int, gdate: int, appyear: int, country: chararray, rest: chararray);
 only90 = FILTER apat BY year == 1990 AND country == '"US"';
-first_citied = GROUP cite BY citied;
-count_citied = FOREACH first_citied GENERATE group, COUNT(cite) AS counts;
-citied90 = JOIN only90 BY id, count_citied BY group;
-most_citied = ORDER citied90 BY counts DESC;
-most_citied_id_count = FOREACH most_citied GENERATE id, counts;
-toPrint = LIMIT most_citied_id_count 10;
+cited90 = JOIN only90 BY id, cite BY cited;
+group_cited = GROUP cited90 BY id;
+count_cited = FOREACH group_cited GENERATE group, COUNT(cited90) AS counts; 
+most_citied = ORDER count_cited BY counts DESC;
+toPrint = LIMIT most_citied 10;
 DUMP toPrint;
